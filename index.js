@@ -11,8 +11,13 @@ const sharingContainer = document.querySelector(".sharing-container");
 const fileURLInput = document.querySelector("#fileURL");
 const copyBtn = document.querySelector("#copyBtn");
 
+const emailForm = document.querySelector("#emailForm");
+
+const toast = document.querySelector(".toast");
+
 const host = "https://innshare.herokuapp.com/"
 const uploadURL = `${host}api/files`;
+const emailURL = "${host}api/files/send";
 // const uploadURL = `${host}api/files`;
 
 dropZone.addEventListener("dragover", (e)=>{
@@ -28,12 +33,13 @@ dropZone.addEventListener("dragleave", ()=>{
 });
 
 dropZone.addEventListener("drop", (e)=>{
+    console.log(e);
     e.preventDefault();
     dropZone.classList.remove("dragged");
     const files = e.dataTransfer.files;
     console.table(files);
     console.log(e.dataTransfer.files.length);
-    if(files.length){
+    if(!files.length){
         fileInput.files = files;
         uploadFile();
     }
@@ -51,6 +57,7 @@ copyBtn.addEventListener("click", (e)=>{
     fileURLInput.select();
     // .execCommand is depricated
     document.execCommand("copy");
+    showToast("Link Copied!")
 });
 
 const uploadFile = () => {
@@ -62,16 +69,21 @@ const uploadFile = () => {
     // jab event change (finissh , stop , start) hota hai to hume state milta hai 
     xhr.onreadystatechange = () => {
         if(xhr.readyState==XMLHttpRequest.DONE){
-            console.log(xhr.response);
+            // console.log(xhr.response);
             showLink(JSON.parse(xhr.response));
         }
     };
 
     xhr.upload.onprogress = updateProgress;
     // 1:10 
+    xhr.upload.onerror = () => {
+        fileInput.value = "";
+        // console.log(xhr.statusText);
+        showToast(`Error in upload: ${xhr.statusText}`);
+    }
 
     xhr.open("POST", uploadURL);
-    xhr.send(formData)
+    xhr.send(formData);
 };
 
 const updateProgress = (e)=>{
@@ -97,11 +109,54 @@ const updateProgress = (e)=>{
 
 const showLink = ({file: url})=>{
     console.log(url);
+    emailForm[2].Attribute("disabled","true");
+    fileInput.value = "";
     // hide progress bar after upload 
     progressContainer.style.display = "none";
     sharingContainer.style.display = "block";
 
     fileURLInput.value = url;
-}
+};
 
-//  showLink("cskbwkbilshodciilcbilswbdlicbildilb");
+emailForm.addEventListener("submit",(e)=>{
+    e.preventDefault();
+    console.log("submitted");
+    const url = fileURLInput.value;
+    // const url = "uru.gn/dec.ac.in/21_22/my/jbbjbjbjb/";
+
+    const formData = {
+        uuid: url.split("/").splice(-1,1)[0],
+        emailTo: emailForm.elements["to-email"].value,
+        emailFrom: emailForm.elements["from-email"].value
+        // emialFrom not showing while cosole.table(formData) 2:23
+    };
+    // console.log(formData.emailFrom)
+    // console.count(formData);
+    emailForm[2].setAttribute("disabled","true");
+    fetch(emailURL, {
+        method: "POST",
+        headers : {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
+    }).then(res => res.json())
+      .then(({success}) => {
+        if(success){
+            sharingContainer.style.display = "none";
+            showToast("Email Sent!");
+        }
+    });   
+
+});
+//   showLink("cskbwkbilshodciilcbilswbdlicbildilb");
+
+let toastTimer;
+const showToast = (msg) => {
+    toast.innerText = msg;
+    toast.style.transform = "translate(-50%,0)";
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>{
+    toast.style.transform = "translate(-50%,60px)";
+    
+    },2000);
+};
