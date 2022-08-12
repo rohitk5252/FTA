@@ -20,6 +20,8 @@ const uploadURL = `${host}api/files`;
 const emailURL = "${host}api/files/send";
 // const uploadURL = `${host}api/files`;
 
+const maxAllowedSize = 100*1024*1024; // 100mb
+
 dropZone.addEventListener("dragover", (e)=>{
     e.preventDefault();
     if(!dropZone.classList.contains("dragged")){
@@ -61,8 +63,23 @@ copyBtn.addEventListener("click", (e)=>{
 });
 
 const uploadFile = () => {
-    progressContainer.style.display = "block";
+    
+
+    if(fileInput.files.length >1){
+        resetFileInput();
+        showToast("Only Upload 1 File");
+        return;
+    }
     const file = fileInput.files[0];
+
+    if(file.size>maxAllowedSize){
+        showToast("Can't upload more than 100MB");
+        resetFileInput();
+        return;
+    }
+    progressContainer.style.display = "block";
+
+
     const formData = new FormData();
     formData.append("myfile", file);
     const xhr = new XMLHttpRequest();
@@ -77,7 +94,7 @@ const uploadFile = () => {
     xhr.upload.onprogress = updateProgress;
     // 1:10 
     xhr.upload.onerror = () => {
-        fileInput.value = "";
+        resetFileInput();
         // console.log(xhr.statusText);
         showToast(`Error in upload: ${xhr.statusText}`);
     }
@@ -104,13 +121,15 @@ const updateProgress = (e)=>{
 //     progressBar.style.transform = `scaleX(${percent/100})`;
 // }  
  
-
+const resetFileInput = () => {
+    fileInput.value = "";
+}
    
 
 const showLink = ({file: url})=>{
     console.log(url);
     emailForm[2].Attribute("disabled","true");
-    fileInput.value = "";
+    resetFileInput();
     // hide progress bar after upload 
     progressContainer.style.display = "none";
     sharingContainer.style.display = "block";

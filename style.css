@@ -13,11 +13,16 @@ body, html{
     margin: 0;
     overflow: hidden;
 }
+
 body , .drop-zone, .upload-container{
     display: flex;
     align-items: center;
     justify-content: center;
     flex-direction: column;
+}
+
+body {
+    flex-direction: row;
 }
 
 .upload-container {
@@ -26,7 +31,9 @@ body , .drop-zone, .upload-container{
     box-shadow: 0px 20px 20px #0000002e;
     /*left-right up-down failna colour*/
 }
-
+.upload-container .title {
+    font-size: 18px;
+}
 .drop-zone {
     width: var(--container-width);
     min-height: 200px;
@@ -217,4 +224,26 @@ p {
     transition: transform ease-in-out 0.2s;
     box-shadow: 0px 0px 20px #0000002e;
     
+}
+
+.upload-vector {
+    background: url(./undraw-upload.svg) no-repeat center;
+    background-size: contain;
+    height: 50vh;
+    width: 50vw;
+}
+
+@media screen and (max-width: 900px){
+    :root{
+        --container-width : 320px;
+    }
+    .upload-vector { display: none ;
+     }
+     .email-container .field {
+        flex-direction: column;
+        width: 300px;
+     }
+     .email-container label {
+        font-size: 10px;
+    }
 }
